@@ -1,0 +1,46 @@
+#!/bin/bash
+_help_indentation="  "
+CYAN='\033[0;36m'
+NC='\033[0m'
+
+function get_group_help_lines {
+  local dir=($1)
+  local indentation=($2)
+  local lines=""
+  local IFS=$'\n'
+
+  for node in `ls -1 --group-directories-first $dir`; do
+    local node=$dir/$node
+
+    if [[ -d $node ]]; then
+      local dir_help_line=$(get_group_help_lines $node $indentation$_help_indentation)
+      if [ ! -z "$dir_help_line" ]; then
+        lines=$lines$'\n'$dir_help_line$'\n '
+      fi
+    else
+      local task_help_line=$(get_task_help_line $node $indentation$_help_indentation)
+      if [ ! -z "$task_help_line" ]; then
+        lines=$lines$'\n'$task_help_line
+      fi
+    fi
+  done
+
+  if [ ! -z "$lines" ]; then
+    echo "$indentation`basename $dir`:"
+    for line in $lines; do echo -e "$line"; done
+  fi
+}
+
+function get_task_help_line {
+  local name=`basename $1`
+  local task=`printf "%-24s %s" $2$name`
+  local content=`cat $1`
+
+  echo "$CYAN$task$NC$content"
+}
+
+function print_help {
+  get_group_help_lines "taskoj"
+}
+
+print_help
